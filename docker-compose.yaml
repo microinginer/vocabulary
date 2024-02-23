@@ -11,12 +11,14 @@ services:
     depends_on:
       - mysql
       - php
+
   php:
     build:
       context: docker/php
       dockerfile: Dockerfile
     volumes:
       - ./:/var/www/application
+
   mysql:
     image: mysql:latest
     ports:
@@ -42,5 +44,11 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./:/var/www/application
-    entrypoint: ["php", "/var/www/application/artisan"]
+    entrypoint: [ "php", "/var/www/application/artisan" ]
 
+  node:
+    build:
+      context: docker/nodejs
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/var/www/application

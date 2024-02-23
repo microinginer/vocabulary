@@ -11,7 +11,19 @@ docker-compose up nginx -d
 Install packages via composer
 ---
 ```shell
-docker-compose run --rm composer install
+docker-compose run --rm composer install --prefer-dist
+```
+
+Install packages via npm
+---
+```shell
+docker-compose run --rm node yarn install
+```
+
+Build js assets
+---
+```shell
+docker-compose run --rm node yarn build
 ```
 
 Apply migrations
