@@ -1,7 +1,7 @@
 Init project
 ---
 ```shell
-cp env.example .env
+cp .env.example .env
 ```
 You should change database credentials in .env then you can start containers
 
