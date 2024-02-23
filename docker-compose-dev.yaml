@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  nginx:
+    depends_on:
+      - node
+
+  node:
+    ports:
+      - "5173:5173"
+    entrypoint: ["yarn", "dev", "--host"]

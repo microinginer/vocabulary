@@ -4,9 +4,6 @@ Init project
 cp env.example .env
 ```
 You should change database credentials in .env then you can start containers
-```shell
-docker-compose up nginx -d 
-```
 
 Install packages via composer
 ---
@@ -24,6 +21,18 @@ Build js assets
 ---
 ```shell
 docker-compose run --rm node yarn build
+```
+
+Start project in Production mode
+---
+```shell
+docker-compose up nginx -d 
+```
+
+Start project in development mode
+---
+```shell
+docker-compose -f docker-compose.yaml -f docker-compose-dev.yaml up nginx -d
 ```
 
 Apply migrations
