@@ -11,6 +11,12 @@ Install packages via composer
 docker-compose run --rm composer install --prefer-dist
 ```
 
+Generate key for application
+---
+```shell
+docker-compose run --rm artisan key:generate
+```
+
 Install packages via npm
 ---
 ```shell
