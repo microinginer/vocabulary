@@ -23,22 +23,21 @@ Install packages via npm
 docker-compose run --rm node yarn install
 ```
 
-Build js assets
+Build js assets for production mode
 ---
 ```shell
 docker-compose run --rm node yarn build
 ```
+Watch js assets for development mode
+---
+```shell
+docker-compose run --rm --service-ports node yarn dev --host
+```
 
-Start project in Production mode
+Start project
 ---
 ```shell
 docker-compose up nginx -d 
-```
-
-Start project in development mode
----
-```shell
-docker-compose -f docker-compose.yaml -f docker-compose-dev.yaml up nginx -d
 ```
 
 Apply migrations
