@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreWordSentencesRequest;
-use App\Http\Requests\StoreWordsRequest;
-use App\Http\Requests\UpdateWordsRequest;
+use App\Http\Requests\WordSentencesFormRequest;
+use App\Http\Requests\WordRequestForm;
 use App\Models\Words;
 use App\Models\WordSentences;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 
 class WordsController extends Controller
@@ -17,7 +17,6 @@ class WordsController extends Controller
     public function index()
     {
         $words = Words::query()
-//            ->where('is_active', true)
             ->paginate();
 
         return Inertia::render('Words/Index', [
@@ -34,29 +33,6 @@ class WordsController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreWordsRequest $request)
-    {
-        $model = new Words();
-        $model->fill($request->all());
-        $model->save();
-
-        return to_route('words');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Words $words)
-    {
-        return Inertia::render('Words/Show', [
-            'words' => $words,
-            'sentences' => $words->getSentences()->get(),
-        ]);
-    }
-
-    /**
      * Show the form for editing the specified resource.
      */
     public function edit(Words $words)
@@ -67,12 +43,32 @@ class WordsController extends Controller
     }
 
     /**
+     * Display the specified resource.
+     */
+    public function show(Words $words)
+    {
+        return Inertia::render('Words/Show', [
+            'words' => $words,
+            'sentences' => $words->sentences,
+        ]);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(WordRequestForm $request)
+    {
+        $request->save(new Words());
+
+        return to_route('words');
+    }
+
+    /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateWordsRequest $request, Words $words)
+    public function update(WordRequestForm $request, Words $words): RedirectResponse
     {
-        $words->fill($request->all());
-        $words->save();
+        $request->save($words);
 
         return to_route('words');
     }
@@ -87,12 +83,11 @@ class WordsController extends Controller
         return to_route('words');
     }
 
-    public function sentenceStore(Words $words, StoreWordSentencesRequest $sentencesRequest)
+    public function sentenceStore(Words $words, WordSentencesFormRequest $sentencesRequest)
     {
         $model = new WordSentences();
         $model->words_id = $words->id;
-        $model->fill($sentencesRequest->all());
-        $model->save();
+        $sentencesRequest->save($model);
 
         return to_route('words.show', $words);
     }

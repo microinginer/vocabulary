@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Words extends Model
 {
@@ -15,7 +16,7 @@ class Words extends Model
         'is_active',
     ];
 
-    public function getSentences()
+    public function sentences(): HasMany
     {
         return $this->hasMany(WordSentences::class);
     }

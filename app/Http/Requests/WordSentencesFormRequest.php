@@ -2,9 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Models\WordSentences;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreWordSentencesRequest extends FormRequest
+class WordSentencesFormRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,5 +26,10 @@ class StoreWordSentencesRequest extends FormRequest
             'content' => ['required'],
             'content_translate' => ['required'],
         ];
+    }
+
+    public function save(WordSentences $model):bool
+    {
+        return $model->fill($this->all())->save();
     }
 }

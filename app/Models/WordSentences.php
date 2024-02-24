@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class WordSentences extends Model
@@ -18,7 +19,7 @@ class WordSentences extends Model
         'word_id',
     ];
 
-    public function getWord()
+    public function word(): BelongsTo
     {
         return $this->belongsTo(Words::class);
     }

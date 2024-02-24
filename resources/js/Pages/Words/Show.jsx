@@ -24,7 +24,7 @@ export default function Show({auth, words, sentences}) {
                         </tr>
                         </thead>
                         <tbody>
-                        {sentences && sentences.map(sentence => (
+                        {sentences.map(sentence => (
                             <tr key={sentence.id}>
                                 <td>{sentence.id}</td>
                                 <td>{sentence.content}</td>
