@@ -30,7 +30,7 @@ class WordsController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Words/Index');
+        return Inertia::render('Words/Create');
     }
 
     /**

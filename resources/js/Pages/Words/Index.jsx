@@ -42,6 +42,7 @@ export default function Index({auth, words}) {
                                             <td>
                                                 <Link className={'btn btn-sm btn-primary'}
                                                       href={route('words.edit', word)}>Edit</Link>
+                                                &nbsp;
                                                 <Link className={'btn btn-sm btn-danger'}
                                                       href={route('words.delete', word)}>Delete</Link>
                                             </td>

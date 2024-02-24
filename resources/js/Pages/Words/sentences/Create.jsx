@@ -25,16 +25,8 @@ export default function Create({auth, words}) {
 
     return (
         <div className="py-12">
-            <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div className=" dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div className=" dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                        <div className="p-6 text-gray-900 dark:text-gray-100">
-                            <Form data={data} processing={processing} setData={setData} errors={errors}
-                                  submit={submit} />
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <Form data={data} processing={processing} setData={setData} errors={errors}
+                  submit={submit}/>
         </div>
     );
 }
