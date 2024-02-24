@@ -1,6 +1,4 @@
-import ApplicationLogo from '@/Components/ApplicationLogo';
 import {Link} from '@inertiajs/react';
-import NavLink from "@/Components/NavLink.jsx";
 
 export default function MainLayout({children, auth}) {
     return (
@@ -27,7 +25,7 @@ export default function MainLayout({children, auth}) {
                                     <Link href={route('words')} className="me-3 py-2 text-dark text-decoration-none">
                                         Words
                                     </Link>
-                                    <Link method={'post'} href={route('logout')} className="me-3 py-2 text-dark text-decoration-none">
+                                    <Link href={route('logout')} className="me-3 py-2 text-dark text-decoration-none">
                                         Logout
                                     </Link>
                                 </>

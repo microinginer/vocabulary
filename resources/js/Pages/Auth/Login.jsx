@@ -50,7 +50,7 @@ export default function Login({status, canResetPassword}) {
                                         isFocused={true}
                                         onChange={(e) => setData('email', e.target.value)}
                                     />
-                                    <InputError message={errors.email} for={'email'} className="invalid-feedback"/>
+                                    <InputError message={errors.email} className="invalid-feedback"/>
                                 </div>
                                 <div className="mb-3">
 
@@ -81,10 +81,7 @@ export default function Login({status, canResetPassword}) {
                                     </label>
                                     &nbsp;
                                     {canResetPassword && (
-                                        <Link
-                                            href={route('password.request')}
-                                            className="float-right"
-                                        >
+                                        <Link href={route('password.request')} className="float-right">
                                             Forgot your password?
                                         </Link>
                                     )}
