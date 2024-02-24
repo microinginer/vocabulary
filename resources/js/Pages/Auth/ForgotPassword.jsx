@@ -3,6 +3,7 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { Head, useForm } from '@inertiajs/react';
+import MainLayout from "@/Layouts/MainLayout.jsx";
 
 export default function ForgotPassword({ status }) {
     const { data, setData, post, processing, errors } = useForm({
@@ -16,7 +17,7 @@ export default function ForgotPassword({ status }) {
     };
 
     return (
-        <GuestLayout>
+        <MainLayout>
             <Head title="Forgot Password" />
 
             <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
@@ -31,20 +32,21 @@ export default function ForgotPassword({ status }) {
                     id="email"
                     type="email"
                     name="email"
+                    placeholder={'example@domain.com'}
                     value={data.email}
-                    className="mt-1 block w-full"
+                    className={"form-control " + (errors.email ? 'is-invalid' : '')}
                     isFocused={true}
                     onChange={(e) => setData('email', e.target.value)}
                 />
 
-                <InputError message={errors.email} className="mt-2" />
+                <InputError message={errors.email} className="invalid-feedback" />
 
                 <div className="flex items-center justify-end mt-4">
-                    <PrimaryButton className="ms-4" disabled={processing}>
+                    <PrimaryButton className="btn btn-primary" disabled={processing}>
                         Email Password Reset Link
                     </PrimaryButton>
                 </div>
             </form>
-        </GuestLayout>
+        </MainLayout>
     );
 }
