@@ -14,6 +14,9 @@ class Words extends Model
         'word',
         'translate',
         'is_active',
+        'length',
+        'pronunciation',
+        'difficulty_level',
     ];
 
     public function sentences(): HasMany
