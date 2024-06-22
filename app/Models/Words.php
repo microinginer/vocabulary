@@ -23,4 +23,8 @@ class Words extends Model
     {
         return $this->hasMany(WordSentences::class);
     }
+    public function customWords(): HasMany
+    {
+        return $this->hasMany(CustomWord::class, 'word_id');
+    }
 }

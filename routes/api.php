@@ -1,8 +1,13 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ChallengeController;
+use App\Http\Controllers\Api\UserChallengeController;
 use App\Http\Controllers\Api\WordsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\CustomWordListController;
+use App\Http\Controllers\Api\CustomWordController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,5 +24,33 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/challenges', [ChallengeController::class, 'index']);
+    Route::get('/user-challenges', [UserChallengeController::class, 'index']);
+    Route::post('/user-challenges/progress', [UserChallengeController::class, 'updateProgress']);
+});
 
 Route::get('random-words', [WordsController::class, 'getRandomWords']);
+
+
+Route::middleware('auth:sanctum')->group(function () {
+    // Routes for custom word lists
+    Route::get('custom-word-lists', [CustomWordListController::class, 'index']);
+    Route::post('custom-word-lists', [CustomWordListController::class, 'store']);
+    Route::get('custom-word-lists/{id}', [CustomWordListController::class, 'show']);
+    Route::put('custom-word-lists/{id}', [CustomWordListController::class, 'update']);
+    Route::delete('custom-word-lists/{id}', [CustomWordListController::class, 'destroy']);
+
+    // Routes for custom words within a specific list
+    Route::get('custom-word-lists/{listId}/words', [CustomWordController::class, 'index']);
+    Route::post('custom-word-lists/{listId}/words', [CustomWordController::class, 'store']);
+    Route::get('custom-word-lists/{listId}/words/{id}', [CustomWordController::class, 'show']);
+    Route::put('custom-word-lists/{listId}/words/{id}', [CustomWordController::class, 'update']);
+    Route::delete('custom-word-lists/{listId}/words/{id}', [CustomWordController::class, 'destroy']);
+});
+
+Route::post('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+});
