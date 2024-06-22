@@ -12,8 +12,10 @@ class Challenge extends Model
     protected $fillable = [
         'name',
         'type',
+        'sub_type',
         'goal',
     ];
+
 
     public function userChallenges()
     {
