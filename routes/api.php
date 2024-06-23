@@ -29,6 +29,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user-challenges', [UserChallengeController::class, 'index']);
     Route::post('/user-challenges/progress', [UserChallengeController::class, 'updateProgress']);
     Route::put('challenges/update-progress', [ChallengeController::class, 'updateProgressByMetrics']);
+    Route::post('/user-challenges/add', [UserChallengeController::class, 'addChallenge']);
+    Route::delete('/user-challenges/{id}', [UserChallengeController::class, 'removeChallenge']);
 });
 
 Route::get('random-words', [WordsController::class, 'getRandomWords']);
