@@ -21,11 +21,18 @@ class AuthController extends Controller
         if ($payload) {
             $email = $payload['email'];
             $name = $payload['name'];
+            $avatar = $payload['picture'];  // Получаем URL аватарки из токена
 
             $user = User::firstOrCreate(
                 ['email' => $email],
-                ['name' => $name, 'password' => Hash::make(uniqid())]
+                ['name' => $name, 'password' => Hash::make(uniqid()), 'avatar' => $avatar]
             );
+
+            // Если пользователь уже существует, обновляем аватарку
+            if (!$user->wasRecentlyCreated && $user->avatar !== $avatar) {
+                $user->avatar = $avatar;
+                $user->save();
+            }
 
             $token = $user->createToken('authToken')->plainTextToken;
 
