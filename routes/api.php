@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChallengeController;
 use App\Http\Controllers\Api\UserChallengeController;
+use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\WordsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -32,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user-challenges/add', [UserChallengeController::class, 'addChallenge']);
     Route::delete('/user-challenges/{id}', [UserChallengeController::class, 'removeChallenge']);
 });
+Route::get('/online-users', [UserController::class, 'getOnlineUsers'])->middleware('auth:sanctum');
 
 Route::get('random-words', [WordsController::class, 'getRandomWords']);
 

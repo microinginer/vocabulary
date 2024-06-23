@@ -1,8 +1,6 @@
 FROM php:8.3-fpm-alpine
 
-#RUN apk add --update \
-#  libreoffice \
-#  ttf-linux-libertine
+RUN apk add --update supervisor
 
 RUN apk add --no-cache zip libzip-dev
 RUN docker-php-ext-configure zip

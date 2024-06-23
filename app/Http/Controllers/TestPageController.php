@@ -11,4 +11,9 @@ class TestPageController extends Controller
     {
         return Inertia::render('TestPage', ['author' => 'Ruslan Madatov']);
     }
+
+    public function ws()
+    {
+        return view('ws');
+    }
 }

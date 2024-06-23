@@ -11,6 +11,7 @@ services:
     depends_on:
       - mysql
       - php
+      - supervisor
 
   php:
     build:
@@ -18,6 +19,19 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./:/var/www/application
+
+  supervisor:
+    build:
+      context: docker/php
+      dockerfile: Dockerfile
+    ports:
+      - "5610:5610"
+      - "9001:9001"
+    volumes:
+      - ./:/var/www/application
+      - ./docker/supervisor:/etc/supervisor/
+      - ./storage/logs/supervisor:/var/log/supervisor/
+    entrypoint: ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
 
   mysql:
     image: mysql:latest

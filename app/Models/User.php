@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -23,6 +22,7 @@ class User extends Authenticatable
         'email',
         'password',
         'avatar',
+        'is_online'
     ];
 
     /**
@@ -49,8 +49,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(CustomWordList::class);
     }
-    public function userChallenges()
+    public function userChallenges(): HasMany
     {
         return $this->hasMany(UserChallenge::class);
+    }
+
+    public function updateOnlineStatus($status): void
+    {
+        $this->is_online = $status;
+        $this->save();
     }
 }
