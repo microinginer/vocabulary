@@ -14,7 +14,7 @@ class UserController extends Controller
         $currentUserId = Auth::id();
 
         $onlineUsers = User::where('is_online', true)
-//            ->where('id', '<>', $currentUserId)
+            ->where('id', '<>', $currentUserId)
             ->take(20)
             ->get();
 
