@@ -59,4 +59,27 @@ class User extends Authenticatable
         $this->is_online = $status;
         $this->save();
     }
+    public function gameSessionsAsPlayer1()
+    {
+        return $this->hasMany(GameSession::class, 'player1_id');
+    }
+
+    public function gameSessionsAsPlayer2()
+    {
+        return $this->hasMany(GameSession::class, 'player2_id');
+    }
+
+    public function gameHistories()
+    {
+        return $this->hasMany(GameHistory::class);
+    }
+
+    public function hasActiveGame()
+    {
+        return GameSession::where(function ($query) {
+            $query->where('player1_id', $this->id)
+                ->orWhere('player2_id', $this->id);
+        })->where('status', '!=', 'completed')
+            ->exists();
+    }
 }

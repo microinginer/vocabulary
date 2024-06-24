@@ -17,7 +17,7 @@
     const sendButton = document.getElementById('send');
 
     connectButton.addEventListener('click', () => {
-        socket = new WebSocket('ws://localhost:5610');
+        socket = new WebSocket('ws://words.todevelop.ru:5610');
 
         socket.onopen = function () {
             statusDiv.textContent = 'Connected';

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChallengeController;
+use App\Http\Controllers\Api\GameController;
 use App\Http\Controllers\Api\UserChallengeController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\WordsController;
@@ -58,4 +59,13 @@ Route::post('/auth/google/callback', [AuthController::class, 'handleGoogleCallba
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
+});
+
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/game', [GameController::class, 'createGame']);
+    Route::post('/game/{sessionId}/accept', [GameController::class, 'acceptGame']);
+    Route::post('/game/{sessionId}/decline', [GameController::class, 'declineGame']);
+    Route::get('/games/active', [GameController::class, 'getActiveSessions']);
+    Route::get('/games/history', [GameController::class, 'getGameHistory']);
 });
