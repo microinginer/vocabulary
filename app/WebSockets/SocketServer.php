@@ -2,6 +2,7 @@
 
 namespace App\WebSockets;
 
+use App\Models\GameAnswer;
 use App\Models\GameHistory;
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
@@ -13,18 +14,19 @@ class SocketServer implements MessageComponentInterface
 {
     protected $clients;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->clients = new \SplObjectStorage;
     }
 
-    public function onOpen(ConnectionInterface $conn) {
+    public function onOpen(ConnectionInterface $conn)
+    {
         $this->clients->attach($conn);
-        Log::info("New connection! ({$conn->resourceId})");
     }
 
-    public function onMessage(ConnectionInterface $from, $msg) {
+    public function onMessage(ConnectionInterface $from, $msg)
+    {
         $data = json_decode($msg);
-        Log::info("New Message ".$msg);
 
         if (isset($data->token)) {
             $token = PersonalAccessToken::findToken($data->token);
@@ -38,7 +40,7 @@ class SocketServer implements MessageComponentInterface
                 }
             }
         } elseif (isset($data->action)) {
-            Log::info("New action ".$data->action);
+            Log::info("Call action: " . $data->action);
 
             $this->handleAction($from, $data);
         }
@@ -57,12 +59,64 @@ class SocketServer implements MessageComponentInterface
             case 'decline_game':
                 $this->declineGame($from, $data);
                 break;
-            case 'end_game':
-                $this->endGame($from, $data);
+            case 'correct_answer':
+            case 'in_correct_answer':
+                $this->handleAnswer($from, $data);
+                break;
+            case 'cancel_pending_games':
+                $this->cancelGame($from, $data);
+                break;
+            case 'complete_game':
+                $this->completeGame($from, $data);
                 break;
             default:
                 Log::warning("Unknown action: {$data->action}");
         }
+    }
+    protected function handleAnswer(ConnectionInterface $from, $data)
+    {
+        $user = $from->user;
+        $session = GameSession::findOrFail($data->session_id);
+
+        GameAnswer::create([
+            'game_session_id' => $session->id,
+            'user_id' => $user->id,
+            'word_id' => $data->word_id,
+            'word_sentence_id' => $data->sentence_id,
+            'is_correct' => $data->action === 'correct_answer',
+        ]);
+
+        if ($data->isLast) {
+            if ($user->id === $session->player1_id) {
+                $session->update(['is_player1_finished' => true]);
+                Log::info("User1 {$user->id} has finished the game session {$session->id}");
+            }
+
+            if ($user->id === $session->player2_id) {
+                $session->update(['is_player2_finished' => true]);
+                Log::info("User2 {$user->id} has finished the game session {$session->id}");
+            }
+        }
+
+        $player1CorrectAnswer = GameAnswer::where('game_session_id', $session->id)
+            ->where('user_id', $session->player1_id)
+            ->where('is_correct', true)
+            ->count();
+        $player2CorrectAnswer = GameAnswer::where('game_session_id', $session->id)
+            ->where('user_id', $session->player2_id)
+            ->where('is_correct', true)
+            ->count();
+
+        $response = [
+            'type' => 'answer_result',
+            'session_id' => $session->id,
+            'user1Score' => $player1CorrectAnswer,
+            'user2Score' => $player2CorrectAnswer,
+            'isFinished' => $session->is_player1_finished && $session->is_player2_finished
+        ];
+
+        $this->notifyUser($session->player1_id, $response);
+        $this->notifyUser($session->player2_id, $response);
     }
 
     protected function createGame(ConnectionInterface $from, $data)
@@ -121,10 +175,50 @@ class SocketServer implements MessageComponentInterface
         ]));
     }
 
+    protected function cancelGame(ConnectionInterface $from, $data)
+    {
+        $user = $from->user;
+
+        if (empty($data->session_id)) {
+            $session = GameSession::where(function ($query) use ($user) {
+                $query->where('player1_id', $user->id)
+                    ->orWhere('player2_id', $user->id);
+            })->where('status', 'pending')
+                ->orWhere('status', 'active')
+                ->first();
+        } else {
+            $session = GameSession::findOrFail($data->session_id);
+        }
+
+        $session->delete();
+
+        Log::info("Game declined by user {$user->id}");
+
+        $this->notifyUser($session->player1_id, [
+            'type' => 'game_cancelled',
+            'session_id' => $session->id
+        ]);
+
+        $this->notifyUser($session->player2_id, [
+            'type' => 'game_cancelled',
+            'session_id' => $session->id
+        ]);
+    }
+
     protected function declineGame(ConnectionInterface $from, $data)
     {
-        $session = GameSession::findOrFail($data->session_id);
         $user = $from->user;
+
+        if (empty($data->session_id)) {
+            $session = GameSession::where(function ($query) use ($user) {
+                $query->where('player1_id', $user->id)
+                    ->orWhere('player2_id', $user->id);
+            })->where('status', 'pending')
+                ->orWhere('status', 'active')
+                ->first();
+        } else {
+            $session = GameSession::findOrFail($data->session_id);
+        }
 
         if ($session->player2_id !== $user->id) {
             $from->send(json_encode(['error' => 'You are not authorized to decline this game']));
@@ -139,11 +233,10 @@ class SocketServer implements MessageComponentInterface
             'type' => 'game_declined',
             'session_id' => $session->id
         ]);
-
-        $from->send(json_encode([
+        $this->notifyUser($session->player2_id, [
             'type' => 'game_declined',
             'session_id' => $session->id
-        ]));
+        ]);
     }
 
     protected function notifyUser($userId, $message)
@@ -175,6 +268,28 @@ class SocketServer implements MessageComponentInterface
             $user->updateOnlineStatus(false);
             Log::info("User {$user->id} is offline.");
             $this->broadcastStatusUpdate($user);
+
+            // Отмена вызова и удаление сессии игры при отключении пользователя
+            $activeSession = GameSession::where(function ($query) use ($user) {
+                $query->where('player1_id', $user->id)
+                    ->orWhere('player2_id', $user->id);
+            })->where('status', 'pending')
+                ->orWhere('status', 'active')
+                ->first();
+
+            if ($activeSession) {
+                $activeSession->delete();
+                Log::info("Game session {$activeSession->id} has been deleted due to user disconnection.");
+
+                $this->notifyUser($activeSession->player1_id, [
+                    'type' => 'game_cancelled',
+                    'session_id' => $activeSession->id
+                ]);
+                $this->notifyUser($activeSession->player2_id, [
+                    'type' => 'game_cancelled',
+                    'session_id' => $activeSession->id
+                ]);
+            }
         }
     }
 
@@ -184,7 +299,7 @@ class SocketServer implements MessageComponentInterface
         $conn->close();
     }
 
-    protected function endGame(ConnectionInterface $from, $data)
+    private function completeGame(ConnectionInterface $from, $data)
     {
         $session = GameSession::findOrFail($data->session_id);
         $user = $from->user;
@@ -197,45 +312,19 @@ class SocketServer implements MessageComponentInterface
         // Обновление статуса сессии
         $session->update([
             'status' => 'completed',
+            'game_status' => 'completed',
         ]);
 
-        // Пример начисления очков (логика может быть иной)
-        $score1 = $data->score1;
-        $score2 = $data->score2;
-
-        GameHistory::create([
-            'user_id' => $session->player1_id,
-            'session_id' => $session->id,
-            'score' => $score1,
-            'result' => $score1 > $score2 ? 'win' : ($score1 < $score2 ? 'lose' : 'draw'),
-        ]);
-
-        GameHistory::create([
-            'user_id' => $session->player2_id,
-            'session_id' => $session->id,
-            'score' => $score2,
-            'result' => $score2 > $score1 ? 'win' : ($score2 < $score1 ? 'lose' : 'draw'),
-        ]);
+        Log::info("Game completed by user {$user->id}");
 
         $this->notifyUser($session->player1_id, [
             'type' => 'game_completed',
-            'session_id' => $session->id,
-            'score1' => $score1,
-            'score2' => $score2
+            'session_id' => $session->id
         ]);
 
         $this->notifyUser($session->player2_id, [
             'type' => 'game_completed',
-            'session_id' => $session->id,
-            'score1' => $score1,
-            'score2' => $score2
+            'session_id' => $session->id
         ]);
-
-        $from->send(json_encode([
-            'type' => 'game_completed',
-            'session_id' => $session->id,
-            'score1' => $score1,
-            'score2' => $score2
-        ]));
     }
 }

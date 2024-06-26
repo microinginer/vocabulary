@@ -12,17 +12,9 @@ class GameController extends Controller
 {
     public function getActiveSessions(Request $request)
     {
-        $user = auth()->user();
+        $session = GameSession::query()->find($request->get('session_id'))->first();
 
-        $session = GameSession::where(function ($query) use ($user) {
-            $query->where('player1_id', $user->id)
-                ->orWhere('player2_id', $user->id);
-        })->where('status', 'active')
-            ->orderBy('updated_at', 'desc')
-            ->with(['player1', 'player2']) // Подгружаем данные пользователей
-            ->first();
-
-        $query = Words::with('sentences')->inRandomOrder();
+        $query = Words::with('sentences')->has('sentences', '>=', 2)->has('sentences', '<=', 2)->inRandomOrder();
 
         $words = $query->limit(5)->get();
 
@@ -33,6 +25,7 @@ class GameController extends Controller
                 'game_status' => $session->game_status,
                 'player1' => $session->player1,
                 'player2' => $session->player2,
+                'currentUser' => auth()->user(),
                 'created_at' => $session->created_at,
                 'updated_at' => $session->updated_at,
                 'words' => $words,
@@ -99,5 +92,19 @@ class GameController extends Controller
         $session->delete();
 
         return response()->json(['message' => 'Game declined'], 200);
+    }
+
+    public function resultGame(GameSession $session)
+    {
+        return response()->json([
+            'id' => $session->id,
+            'status' => $session->status,
+            'game_status' => $session->game_status,
+            'player1' => array_merge($session->player1->toArray(), ['isWinner' => $session->isWinner($session->player1_id)]),
+            'player2' => array_merge($session->player2->toArray(), ['isWinner' => $session->isWinner($session->player2_id)]),
+            'currentUser' => auth()->user(),
+            'player1_correct_answers' => $session->player1CorrectAnswersCount(),
+            'player2_correct_answers' => $session->player2CorrectAnswersCount(),
+        ]);
     }
 }

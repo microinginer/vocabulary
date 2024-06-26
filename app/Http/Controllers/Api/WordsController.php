@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Words;
+use App\Models\WordSentences;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -35,6 +36,28 @@ class WordsController extends Controller
         }
 
         // Return the words and difficulty levels as a JSON response
+        return response()->json([
+            'words' => $words,
+            'difficultyLevels' => $difficultyLevels,
+        ]);
+    }
+
+    public function getRandomSentences(Request $request): JsonResponse
+    {
+        $difficultyLevels = [
+            1 => 'Beginner',
+            2 => 'Intermediate',
+            3 => 'Advanced',
+        ];
+
+        $query = Words::with('sentences')->has('sentences', '>=', 2)->has('sentences', '<=', 2)->inRandomOrder();
+
+        $words = $query->limit(10)->get();
+
+        if ($words->isEmpty()) {
+            return response()->json(['message' => 'No words found'], 404);
+        }
+
         return response()->json([
             'words' => $words,
             'difficultyLevels' => $difficultyLevels,

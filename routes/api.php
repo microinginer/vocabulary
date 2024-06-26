@@ -37,6 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('/online-users', [UserController::class, 'getOnlineUsers'])->middleware('auth:sanctum');
 
 Route::get('random-words', [WordsController::class, 'getRandomWords']);
+Route::get('random-sentences', [WordsController::class, 'getRandomSentences']);
 
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -68,4 +69,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/game/{sessionId}/decline', [GameController::class, 'declineGame']);
     Route::get('/games/active', [GameController::class, 'getActiveSessions']);
     Route::get('/games/history', [GameController::class, 'getGameHistory']);
+    Route::get('/game/{session}', [GameController::class, 'resultGame']);
 });
