@@ -7,13 +7,13 @@ use App\Models\Words;
 use Illuminate\Http\Request;
 use App\Models\GameSession;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Log;
 
 class GameController extends Controller
 {
     public function getActiveSessions(Request $request)
     {
-        $session = GameSession::query()->find($request->get('session_id'))->first();
-
+        $session = GameSession::query()->where('id',$request->get('session_id'))->first();
         $query = Words::with('sentences')->has('sentences', '>=', 2)->has('sentences', '<=', 2)->inRandomOrder();
 
         $words = $query->limit(5)->get();
