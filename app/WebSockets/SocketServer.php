@@ -2,8 +2,9 @@
 
 namespace App\WebSockets;
 
+use App\Jobs\WaitingGame;
 use App\Models\GameAnswer;
-use App\Models\GameHistory;
+use App\Models\User;
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -50,14 +51,21 @@ class SocketServer implements MessageComponentInterface
     {
         switch ($data->action) {
             case 'create_game':
-                Log::info("Handle game".$data->action);
+                Log::info("Handle game" . $data->action);
                 $this->createGame($from, $data);
+                $this->broadcastStatusUpdate();
                 break;
             case 'accept_game':
                 $this->acceptGame($from, $data);
+                $this->broadcastStatusUpdate();
                 break;
             case 'decline_game':
                 $this->declineGame($from, $data);
+                $this->broadcastStatusUpdate();
+                break;
+            case 'auto_decline_game':
+                $this->autoDeclineGame($from, $data);
+                $this->broadcastStatusUpdate();
                 break;
             case 'correct_answer':
             case 'in_correct_answer':
@@ -65,14 +73,17 @@ class SocketServer implements MessageComponentInterface
                 break;
             case 'cancel_pending_games':
                 $this->cancelGame($from, $data);
+                $this->broadcastStatusUpdate();
                 break;
             case 'complete_game':
                 $this->completeGame($from, $data);
+                $this->broadcastStatusUpdate();
                 break;
             default:
                 Log::warning("Unknown action: {$data->action}");
         }
     }
+
     protected function handleAnswer(ConnectionInterface $from, $data)
     {
         $user = $from->user;
@@ -131,6 +142,13 @@ class SocketServer implements MessageComponentInterface
             return;
         }
 
+        // Проверка, есть ли активная игра у противника
+        $opponent = User::query()->where('id', $opponentId)->first();
+        if ($opponent && $opponent->hasActiveGame()) {
+            $from->send(json_encode(['error' => 'Opponent already has an active game']));
+            return;
+        }
+
         $session = GameSession::create([
             'player1_id' => $user->id,
             'player2_id' => $opponentId,
@@ -145,6 +163,14 @@ class SocketServer implements MessageComponentInterface
             'session_id' => $session->id,
             'from_user' => $user
         ]);
+
+        $this->notifyUser($user->id, [
+            'type' => 'game_waiting',
+            'session_id' => $session->id,
+            'waiting' => $opponent
+        ]);
+
+        dispatch(new WaitingGame($session))->delay(now()->addSeconds(30));
     }
 
     protected function acceptGame(ConnectionInterface $from, $data)
@@ -209,15 +235,10 @@ class SocketServer implements MessageComponentInterface
     {
         $user = $from->user;
 
-        if (empty($data->session_id)) {
-            $session = GameSession::where(function ($query) use ($user) {
-                $query->where('player1_id', $user->id)
-                    ->orWhere('player2_id', $user->id);
-            })->where('status', 'pending')
-                ->orWhere('status', 'active')
-                ->first();
-        } else {
-            $session = GameSession::findOrFail($data->session_id);
+        $session = GameSession::query()->where('id',$data->session_id)->first();
+
+        if(!$session) {
+            return;
         }
 
         if ($session->player2_id !== $user->id) {
@@ -233,9 +254,15 @@ class SocketServer implements MessageComponentInterface
             'type' => 'game_declined',
             'session_id' => $session->id
         ]);
-        $this->notifyUser($session->player2_id, [
-            'type' => 'game_declined',
-            'session_id' => $session->id
+    }
+
+    protected function autoDeclineGame(ConnectionInterface $from, $data)
+    {
+        Log::info("Game auto declined by supervisor");
+
+        $this->notifyUser($data->player1_id, [
+            'type' => 'game_auto_declined',
+            'session_id' => $data->session_id
         ]);
     }
 
@@ -248,7 +275,7 @@ class SocketServer implements MessageComponentInterface
         }
     }
 
-    protected function broadcastStatusUpdate($user)
+    protected function broadcastStatusUpdate($user = [])
     {
         foreach ($this->clients as $client) {
             $client->send(json_encode([
@@ -270,24 +297,27 @@ class SocketServer implements MessageComponentInterface
             $this->broadcastStatusUpdate($user);
 
             // Отмена вызова и удаление сессии игры при отключении пользователя
-            $activeSession = GameSession::where(function ($query) use ($user) {
-                $query->where('player1_id', $user->id)
-                    ->orWhere('player2_id', $user->id);
-            })->where('status', 'pending')
-                ->orWhere('status', 'active')
+            $activeSession = GameSession::query()
+                ->where(function ($query) use ($user) {
+                    $query->where('player1_id', $user->id)
+                        ->orWhere('player2_id', $user->id);
+                })->whereIn('status', ['pending', 'active'])
                 ->first();
 
             if ($activeSession) {
                 $activeSession->delete();
-                Log::info("Game session {$activeSession->id} has been deleted due to user disconnection.");
+                Log::info("Game session {$activeSession->id} has been deleted due to user {$user->id} disconnection.");
 
                 $this->notifyUser($activeSession->player1_id, [
                     'type' => 'game_cancelled',
-                    'session_id' => $activeSession->id
+                    'session_id' => $activeSession->id,
+                    'when' => 'onClose',
+                    'player1' => $activeSession->player1_id,
                 ]);
                 $this->notifyUser($activeSession->player2_id, [
                     'type' => 'game_cancelled',
-                    'session_id' => $activeSession->id
+                    'session_id' => $activeSession->id,
+                    'when' => 'onClose',
                 ]);
             }
         }

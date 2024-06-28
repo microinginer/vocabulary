@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -13,10 +14,14 @@ class UserController extends Controller
     {
         $currentUserId = Auth::id();
 
-        $onlineUsers = User::where('is_online', true)
+        $onlineUsers = User::query()->where('is_online', true)
             ->where('id', '<>', $currentUserId)
-            ->take(20)
-            ->get();
+            ->get()
+            ->reject(function ($user) {
+                return $user->hasActiveGame();
+            })
+            ->shuffle()
+            ->take(20);
 
         return response()->json($onlineUsers);
     }

@@ -79,7 +79,6 @@ class User extends Authenticatable
         return GameSession::where(function ($query) {
             $query->where('player1_id', $this->id)
                 ->orWhere('player2_id', $this->id);
-        })->where('status', '!=', 'completed')
-            ->exists();
+        })->whereIn('status', ['pending', 'active'])->exists();
     }
 }
