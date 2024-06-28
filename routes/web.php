@@ -20,18 +20,6 @@ use Inertia\Inertia;
 */
 
 Route::get('/', function () {
-    $user = \App\Models\User::query()->where('id', 3)->first();
-    $activeSession = GameSession::query()
-        ->where(function ($query) use ($user) {
-            $query->where('player1_id', $user->id)
-                ->orWhere('player2_id', $user->id);
-        })->whereIn('status', ['pending','active'])
-                ->first()
-    ;
-
-    dd($activeSession);
-
-
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
