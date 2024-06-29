@@ -81,4 +81,14 @@ class User extends Authenticatable
                 ->orWhere('player2_id', $this->id);
         })->whereIn('status', ['pending', 'active'])->exists();
     }
+
+    public function gameAnswers()
+    {
+        return $this->hasMany(GameAnswer::class);
+    }
+
+    public function correctAnswersCount()
+    {
+        return $this->gameAnswers()->where('is_correct', true)->count();
+    }
 }

@@ -25,4 +25,15 @@ class UserController extends Controller
 
         return response()->json($onlineUsers);
     }
+
+    public function getAllUsers(Request $request): JsonResponse
+    {
+        $users = User::query()->withCount(['gameAnswers' => function ($query) {
+            $query->where('is_correct', true);
+        }])
+            ->orderBy('game_answers_count', 'desc')
+            ->paginate(10);
+
+        return response()->json($users);
+    }
 }

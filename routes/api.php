@@ -34,7 +34,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user-challenges/add', [UserChallengeController::class, 'addChallenge']);
     Route::delete('/user-challenges/{id}', [UserChallengeController::class, 'removeChallenge']);
 });
+
 Route::get('/online-users', [UserController::class, 'getOnlineUsers'])->middleware('auth:sanctum');
+Route::get('/all-users', [UserController::class, 'getAllUsers'])->middleware('auth:sanctum');
 
 Route::get('random-words', [WordsController::class, 'getRandomWords']);
 Route::get('random-sentences', [WordsController::class, 'getRandomSentences']);
