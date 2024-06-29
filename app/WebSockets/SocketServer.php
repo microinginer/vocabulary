@@ -2,6 +2,7 @@
 
 namespace App\WebSockets;
 
+use App\Jobs\GameOver;
 use App\Jobs\WaitingGame;
 use App\Models\GameAnswer;
 use App\Models\User;
@@ -77,6 +78,10 @@ class SocketServer implements MessageComponentInterface
                 break;
             case 'complete_game':
                 $this->completeGame($from, $data);
+                $this->broadcastStatusUpdate();
+                break;
+            case 'game_over':
+                $this->gameOver($from, $data);
                 $this->broadcastStatusUpdate();
                 break;
             default:
@@ -177,6 +182,7 @@ class SocketServer implements MessageComponentInterface
     {
         $session = GameSession::findOrFail($data->session_id);
         $user = $from->user;
+        dispatch(new GameOver($session))->delay(now()->addSeconds(120));
 
         if ($session->player2_id !== $user->id) {
             $from->send(json_encode(['error' => 'You are not authorized to accept this game']));
@@ -265,6 +271,20 @@ class SocketServer implements MessageComponentInterface
             'session_id' => $data->session_id
         ]);
     }
+    protected function gameOver(ConnectionInterface $from, $data)
+    {
+        Log::info("Game over auto after timeout");
+
+        $this->notifyUser($data->player1_id, [
+            'type' => 'game_completed',
+            'session_id' => $data->session_id
+        ]);
+
+        $this->notifyUser($data->player2_id, [
+            'type' => 'game_completed',
+            'session_id' => $data->session_id
+        ]);
+    }
 
     protected function notifyUser($userId, $message)
     {
@@ -296,30 +316,30 @@ class SocketServer implements MessageComponentInterface
             Log::info("User {$user->id} is offline.");
             $this->broadcastStatusUpdate($user);
 
-            // Отмена вызова и удаление сессии игры при отключении пользователя
-            $activeSession = GameSession::query()
-                ->where(function ($query) use ($user) {
-                    $query->where('player1_id', $user->id)
-                        ->orWhere('player2_id', $user->id);
-                })->whereIn('status', ['pending', 'active'])
-                ->first();
-
-            if ($activeSession) {
-                $activeSession->delete();
-                Log::info("Game session {$activeSession->id} has been deleted due to user {$user->id} disconnection.");
-
-                $this->notifyUser($activeSession->player1_id, [
-                    'type' => 'game_cancelled',
-                    'session_id' => $activeSession->id,
-                    'when' => 'onClose',
-                    'player1' => $activeSession->player1_id,
-                ]);
-                $this->notifyUser($activeSession->player2_id, [
-                    'type' => 'game_cancelled',
-                    'session_id' => $activeSession->id,
-                    'when' => 'onClose',
-                ]);
-            }
+//            // Отмена вызова и удаление сессии игры при отключении пользователя
+//            $activeSession = GameSession::query()
+//                ->where(function ($query) use ($user) {
+//                    $query->where('player1_id', $user->id)
+//                        ->orWhere('player2_id', $user->id);
+//                })->whereIn('status', ['pending', 'active'])
+//                ->first();
+//
+//            if ($activeSession) {
+//                $activeSession->delete();
+//                Log::info("Game session {$activeSession->id} has been deleted due to user {$user->id} disconnection.");
+//
+//                $this->notifyUser($activeSession->player1_id, [
+//                    'type' => 'game_cancelled',
+//                    'session_id' => $activeSession->id,
+//                    'when' => 'onClose',
+//                    'player1' => $activeSession->player1_id,
+//                ]);
+//                $this->notifyUser($activeSession->player2_id, [
+//                    'type' => 'game_cancelled',
+//                    'session_id' => $activeSession->id,
+//                    'when' => 'onClose',
+//                ]);
+//            }
         }
     }
 
