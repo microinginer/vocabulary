@@ -21,7 +21,9 @@ class WordsController extends Controller
             3 => 'Advanced',
         ];
 
-        $query = Words::with('sentences')->inRandomOrder();
+        $query = Words::with(['sentences' => function ($query) {
+            $query->limit(3);
+        }])->inRandomOrder();
 
         // Filter by difficulty level if provided
         if ($request->has('difficulty_level')) {
@@ -43,7 +45,7 @@ class WordsController extends Controller
             $query->whereNotIn('id', $knownWordIds);
         }
 
-        // Get 10 random words with their sentences from the database
+        // Get 5 random words with their sentences from the database
         $words = $query->limit(5)->get();
 
         // Check if words were found
@@ -67,7 +69,9 @@ class WordsController extends Controller
             3 => 'Advanced',
         ];
 
-        $query = Words::with('sentences')->has('sentences', '>=', 2)->has('sentences', '<=', 2)->inRandomOrder();
+        $query = Words::with(['sentences' => function ($query) {
+            $query->limit(2);
+        }])->has('sentences', '>=', 2)->inRandomOrder();
 
         $words = $query->limit(10)->get();
 
