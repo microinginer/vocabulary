@@ -16,7 +16,7 @@ class WordSentences extends Model
     protected $fillable = [
         'content_translate',
         'content',
-        'word_id',
+        'words_id',
     ];
 
     public function word(): BelongsTo

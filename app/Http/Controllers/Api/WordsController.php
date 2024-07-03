@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\UserWordMark;
 use App\Models\Words;
 use App\Models\WordSentences;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class WordsController extends Controller
 {
@@ -27,6 +29,20 @@ class WordsController extends Controller
             $query->where('difficulty_level', $difficultyLevel);
         }
 
+        // Check if user is authenticated
+        if (Auth::check()) {
+            $user = Auth::user();
+
+            // Get word IDs that the user marked as known
+            $knownWordIds = UserWordMark::where('user_id', $user->id)
+                ->where('is_known', true)
+                ->pluck('word_id')
+                ->toArray();
+
+            // Exclude these words from the query
+            $query->whereNotIn('id', $knownWordIds);
+        }
+
         // Get 10 random words with their sentences from the database
         $words = $query->limit(5)->get();
 
@@ -41,6 +57,7 @@ class WordsController extends Controller
             'difficultyLevels' => $difficultyLevels,
         ]);
     }
+
 
     public function getRandomSentences(Request $request): JsonResponse
     {

@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\ChallengeController;
 use App\Http\Controllers\Api\GameController;
 use App\Http\Controllers\Api\UserChallengeController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\UserWordMarkController;
 use App\Http\Controllers\Api\WordsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +34,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('challenges/update-progress', [ChallengeController::class, 'updateProgressByMetrics']);
     Route::post('/user-challenges/add', [UserChallengeController::class, 'addChallenge']);
     Route::delete('/user-challenges/{id}', [UserChallengeController::class, 'removeChallenge']);
+
+    Route::post('/word-marks', [UserWordMarkController::class, 'store']);
 });
 
 Route::get('/online-users', [UserController::class, 'getOnlineUsers'])->middleware('auth:sanctum');
