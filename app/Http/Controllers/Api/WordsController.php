@@ -23,7 +23,7 @@ class WordsController extends Controller
 
         $query = Words::with(['sentences' => function ($query) {
             $query->limit(3);
-        }])->inRandomOrder();
+        }])->has('sentences', '>=', 2)->inRandomOrder();
 
         // Filter by difficulty level if provided
         if ($request->has('difficulty_level')) {
