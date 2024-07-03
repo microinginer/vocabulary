@@ -22,8 +22,11 @@ class WordsController extends Controller
         ];
 
         $query = Words::with(['sentences' => function ($query) {
-            $query->limit(3);
-        }])->has('sentences', '>=', 2)->inRandomOrder();
+            $query->inRandomOrder();
+        }])
+            ->has('sentences', '>=', 2)
+            ->inRandomOrder();
+
 
         // Filter by difficulty level if provided
         if ($request->has('difficulty_level')) {
@@ -47,10 +50,14 @@ class WordsController extends Controller
 
         // Get 5 random words with their sentences from the database
         $words = $query->limit(5)->get();
-
         // Check if words were found
         if ($words->isEmpty()) {
             return response()->json(['message' => 'No words found'], 404);
+        }
+
+        $words = $words->toArray();
+        foreach ($words as $key => $word) {
+            $words[$key]['sentences'] = array_slice($word['sentences'],0,2);
         }
 
         // Return the words and difficulty levels as a JSON response
@@ -70,13 +77,18 @@ class WordsController extends Controller
         ];
 
         $query = Words::with(['sentences' => function ($query) {
-            $query->limit(2);
+            $query->inRandomOrder();
         }])->has('sentences', '>=', 2)->inRandomOrder();
 
         $words = $query->limit(10)->get();
 
         if ($words->isEmpty()) {
             return response()->json(['message' => 'No words found'], 404);
+        }
+
+        $words = $words->toArray();
+        foreach ($words as $key => $word) {
+            $words[$key]['sentences'] = array_slice($word['sentences'],0,2);
         }
 
         return response()->json([
