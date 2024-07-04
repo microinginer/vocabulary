@@ -42,6 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user-challenges/add', [UserChallengeController::class, 'addChallenge']);
     Route::delete('/user-challenges/{id}', [UserChallengeController::class, 'removeChallenge']);
 
+    Route::get('/word-marks', [UserWordMarkController::class, 'index']);
     Route::post('/word-marks', [UserWordMarkController::class, 'store']);
 });
 
@@ -76,4 +77,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/games/active', [GameController::class, 'getActiveSessions']);
     Route::get('/games/history', [GameController::class, 'getGameHistory']);
     Route::get('/game/{session}', [GameController::class, 'resultGame']);
+    Route::get('/games', [GameController::class, 'getUserGames']);
 });

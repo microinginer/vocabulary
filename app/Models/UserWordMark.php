@@ -13,6 +13,7 @@ class UserWordMark extends Model
         'user_id',
         'word_id',
         'is_known',
+        'repeat_count',
     ];
 
     public function user()
