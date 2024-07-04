@@ -49,7 +49,7 @@ class WordsController extends Controller
         }
 
         // Get 5 random words with their sentences from the database
-        $words = $query->limit(5)->get();
+        $words = $query->limit(7)->get();
         // Check if words were found
         if ($words->isEmpty()) {
             return response()->json(['message' => 'No words found'], 404);

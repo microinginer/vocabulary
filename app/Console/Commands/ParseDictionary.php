@@ -22,7 +22,7 @@ class ParseDictionary extends Command
     {
         // Буквы от A до Z
         $letters = range('A', 'Z');
-        $base_url = "http://www.7english.ru/dictionary.php?id=500&letter=";
+        $base_url = "http://www.7english.ru/dictionary.php?id=3500&letter=";
 
         foreach ($letters as $letter) {
             $url = $base_url . $letter;
@@ -65,6 +65,12 @@ class ParseDictionary extends Command
                         $translationNode = $cols->item(5);
 
                         $value = $valueNode ? trim($valueNode->nodeValue) : '';
+                        $existingWord = Words::where('word', $value)
+                            ->first();
+                        if ($existingWord) {
+                            continue;
+                        }
+
                         $transcription = $transcriptionNode ? trim($transcriptionNode->nodeValue) : '';
                         $translation = $translationNode ? trim($translationNode->nodeValue) : '';
 
@@ -148,7 +154,7 @@ class ParseDictionary extends Command
                     'length' => $word['length'],
                     'pronunciation' => $word['transcription'],
                     'is_active' => 1,
-                    'difficulty_level' => 1,
+                    'difficulty_level' => 3,
                 ]);
 
 

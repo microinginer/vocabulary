@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\ChallengeController;
 use App\Http\Controllers\Api\GameController;
 use App\Http\Controllers\Api\UserChallengeController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\Api\UserWordMarkController;
 use App\Http\Controllers\Api\WordsController;
 use Illuminate\Http\Request;
@@ -23,8 +24,14 @@ use App\Http\Controllers\Api\CustomWordController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::post('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+    Route::put('/user/profile', UserProfileController::class);
+    Route::post('/logout', [AuthController::class, 'logout']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -59,12 +66,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('custom-word-lists/{listId}/words/{id}', [CustomWordController::class, 'show']);
     Route::put('custom-word-lists/{listId}/words/{id}', [CustomWordController::class, 'update']);
     Route::delete('custom-word-lists/{listId}/words/{id}', [CustomWordController::class, 'destroy']);
-});
-
-Route::post('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
-
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
 });
 
 
