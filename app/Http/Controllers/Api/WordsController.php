@@ -21,11 +21,21 @@ class WordsController extends Controller
             3 => 'Advanced',
         ];
 
+        $language = $request->input('language', 'ru');
+
+        if (!in_array($language, ['ru', 'uz', 'az'])) {
+            return response()->json(['message' => 'Invalid language parameter. Valid options are: ru, uz, az.'], 400);
+        }
+
         $query = Words::with(['sentences' => function ($query) {
             $query->inRandomOrder();
         }])
+            ->with(['translations' => function ($query) use ($language) {
+                $query->where('language', $language);
+            }])
             ->has('sentences', '>=', 2)
-            ->inRandomOrder();
+            ->inRandomOrder()
+        ;
 
 
         // Filter by difficulty level if provided
@@ -34,39 +44,38 @@ class WordsController extends Controller
             $query->where('difficulty_level', $difficultyLevel);
         }
 
-        // Check if user is authenticated
         if (Auth::check()) {
             $user = Auth::user();
 
-            // Get word IDs that the user marked as known
             $knownWordIds = UserWordMark::where('user_id', $user->id)
                 ->where('is_known', true)
                 ->pluck('word_id')
                 ->toArray();
 
-            // Exclude these words from the query
             $query->whereNotIn('id', $knownWordIds);
         }
 
-        // Get 5 random words with their sentences from the database
         $words = $query->limit(7)->get();
-        // Check if words were found
         if ($words->isEmpty()) {
             return response()->json(['message' => 'No words found'], 404);
         }
 
         $words = $words->toArray();
+
         foreach ($words as $key => $word) {
             $words[$key]['sentences'] = array_slice($word['sentences'],0,2);
+            $translation = $word['translations'][0]['translation'] ?? null;
+
+            if ($translation) {
+                $words[$key]['translate'] = $translation;
+            }
         }
 
-        // Return the words and difficulty levels as a JSON response
         return response()->json([
             'words' => $words,
             'difficultyLevels' => $difficultyLevels,
         ]);
     }
-
 
     public function getRandomSentences(Request $request): JsonResponse
     {
@@ -76,9 +85,28 @@ class WordsController extends Controller
             3 => 'Advanced',
         ];
 
-        $query = Words::with(['sentences' => function ($query) {
-            $query->inRandomOrder();
-        }])->has('sentences', '>=', 2)->inRandomOrder();
+        $language = $request->input('language', 'ru');
+
+        if (!in_array($language, ['ru', 'uz', 'az'])) {
+            return response()->json(['message' => 'Invalid language parameter. Valid options are: ru, uz, az.'], 400);
+        }
+
+        $query = Words::with(['sentences' => function ($query) use ($language) {
+            $query->inRandomOrder()->with(['translations' => function ($query) use ($language) {
+                $query->where('language', $language);
+            }]);
+        }])
+            ->with(['translations' => function ($query) use ($language) {
+                $query->where('language', $language);
+            }])
+            ->has('sentences', '>=', 2)
+            ->inRandomOrder()
+        ;
+
+        if ($request->has('difficulty_level')) {
+            $difficultyLevel = $request->input('difficulty_level');
+            $query->where('difficulty_level', $difficultyLevel);
+        }
 
         $words = $query->limit(10)->get();
 
@@ -86,9 +114,23 @@ class WordsController extends Controller
             return response()->json(['message' => 'No words found'], 404);
         }
 
+
         $words = $words->toArray();
+
         foreach ($words as $key => $word) {
             $words[$key]['sentences'] = array_slice($word['sentences'],0,2);
+            $translation = $word['translations'][0]['translation'] ?? null;
+            foreach ($words[$key]['sentences'] as $sentenceKey => $sentence) {
+                $sentenceTranslation = $sentence['translations'][0]['translation'] ?? null;
+                if ($sentenceTranslation) {
+                    $words[$key]['sentences'][$sentenceKey]['content_translate'] = $sentenceTranslation;
+                    unset($words[$key]['sentences'][$sentenceKey]['translations']);
+                }
+            }
+
+            if ($translation) {
+                $words[$key]['translate'] = $translation;
+            }
         }
 
         return response()->json([

@@ -27,4 +27,9 @@ class Words extends Model
     {
         return $this->hasMany(CustomWord::class, 'word_id');
     }
+
+    public function translations(): HasMany
+    {
+        return $this->hasMany(WordTranslation::class, 'word_id');
+    }
 }
