@@ -27,8 +27,10 @@ class WordsController extends Controller
             return response()->json(['message' => 'Invalid language parameter. Valid options are: ru, uz, az.'], 400);
         }
 
-        $query = Words::with(['sentences' => function ($query) {
-            $query->inRandomOrder();
+        $query = Words::with(['sentences' => function ($query) use ($language) {
+            $query->inRandomOrder()->with(['translations' => function ($query) use ($language) {
+                $query->where('language', $language);
+            }]);
         }])
             ->with(['translations' => function ($query) use ($language) {
                 $query->where('language', $language);
@@ -68,6 +70,14 @@ class WordsController extends Controller
 
             if ($translation) {
                 $words[$key]['translate'] = $translation;
+            }
+
+            foreach ($words[$key]['sentences'] as $sentenceKey => $sentence) {
+                $sentenceTranslation = $sentence['translations'][0]['translation'] ?? null;
+                if ($sentenceTranslation) {
+                    $words[$key]['sentences'][$sentenceKey]['content_translate'] = $sentenceTranslation;
+                    unset($words[$key]['sentences'][$sentenceKey]['translations']);
+                }
             }
         }
 

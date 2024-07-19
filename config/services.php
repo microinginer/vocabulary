@@ -34,5 +34,10 @@ return [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
     ],
-
+    'google_translate' => [
+        'key' => env('GOOGLE_TRANSLATE_API_KEY'),
+    ],
+    'yandex_translate' => [
+        'key' => env('YANDEX_TRANSLATE_API_KEY'),
+    ],
 ];

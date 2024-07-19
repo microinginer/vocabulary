@@ -8,6 +8,7 @@
         "php": "^8.1",
         "cboden/ratchet": "^0.4.4",
         "google/apiclient": "^2.16",
+        "google/cloud-translate": "^1.17",
         "guzzlehttp/guzzle": "^7.2",
         "inertiajs/inertia-laravel": "^0.6.3",
         "laravel/breeze": "^1.28",
