@@ -10,3 +10,14 @@
     float: right;
     margin-right: -0.625rem;
 }
+
+.editable {
+    cursor: pointer;
+    border-bottom: 1px dotted #000; /* Добавляем нижний бордер с точками */
+}
+
+.editable-input:focus,
+.editable-select:focus {
+    outline: none;
+    border-bottom: 1px solid #000; /* Изменяем нижний бордер на сплошной при фокусе */
+}

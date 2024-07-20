@@ -93,4 +93,9 @@ class Kernel extends HttpKernel
         'throttle' => ThrottleRequests::class,
         'verified' => EnsureEmailIsVerified::class,
     ];
+
+    protected $routeMiddleware = [
+        // другие middleware...
+        'admin' => \App\Http\Middleware\AdminMiddleware::class,
+    ];
 }

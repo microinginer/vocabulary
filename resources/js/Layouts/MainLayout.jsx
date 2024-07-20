@@ -20,12 +20,16 @@ export default function MainLayout({children, auth}) {
                         <nav className="d-inline-flex mt-2 mt-md-0 ms-md-auto">
                             {auth?.user ? (
                                 <>
-                                    <NavLink href={route('dashboard')} className="me-3 py-2 text-dark text-decoration-none">
-                                        Dashboard
+                                {auth.user.role === 'admin' && (
+                                    <>
+                                    <NavLink href={route('admin.word-sentences.index')} className="me-3 py-2 text-dark text-decoration-none">
+                                        Sentences
                                     </NavLink>
-                                    <NavLink href={route('words')} className="me-3 py-2 text-dark text-decoration-none">
+                                    <NavLink href={route('admin.words.index')} className="me-3 py-2 text-dark text-decoration-none">
                                         Words
                                     </NavLink>
+                                    </>
+                                )}
                                     <NavLink as={'button'} method={'post'} href={route('logout')} className="btn btn-default">
                                         Logout
                                     </NavLink>

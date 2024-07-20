@@ -35,6 +35,23 @@ class RouteServiceProvider extends ServiceProvider
 
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
+
+            $this->mapAdminRoutes();  // Вызов метода для маршрутов админ-панели
         });
+    }
+
+    /**
+     * Define the "admin" routes for the application.
+     *
+     * These routes all receive session state, CSRF protection, etc.
+     *
+     * @return void
+     */
+    protected function mapAdminRoutes(): void
+    {
+        Route::middleware(['web', 'auth', 'admin'])
+            ->prefix('admin')
+            ->namespace($this->namespace)
+            ->group(base_path('routes/admin.php'));
     }
 }

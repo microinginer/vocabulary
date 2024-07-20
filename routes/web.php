@@ -38,19 +38,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    Route::get('/words', [WordsController::class, 'index'])->name('words');
-    Route::get('/words/create', [WordsController::class, 'create'])->name('words.create');
-    Route::get('/words/{words}/edit', [WordsController::class, 'edit'])->name('words.edit');
-    Route::get('/words/{words}/delete', [WordsController::class, 'destroy'])->name('words.delete');
-    Route::get('/words/{words}/show', [WordsController::class, 'show'])->name('words.show');
-
-    Route::post('/words/create', [WordsController::class, 'store'])->name('words.store');
-    Route::post('/words/{words}/update', [WordsController::class, 'update'])->name('words.update');
-    Route::post('/words/{words}/update', [WordsController::class, 'update'])->name('words.update');
-
-    Route::post('/words/sentence/{words}/create', [WordsController::class, 'sentenceStore'])->name('words.sentences.store');
-    Route::get('/words/{wordSentences}/sentenceDelete', [WordsController::class, 'sentenceDestroy'])->name('words.sentences.delete');
+//
+//    Route::get('/words', [WordsController::class, 'index'])->name('words');
+//    Route::get('/words/create', [WordsController::class, 'create'])->name('words.create');
+//    Route::get('/words/{words}/edit', [WordsController::class, 'edit'])->name('words.edit');
+//    Route::get('/words/{words}/delete', [WordsController::class, 'destroy'])->name('words.delete');
+//    Route::get('/words/{words}/show', [WordsController::class, 'show'])->name('words.show');
+//
+//    Route::post('/words/create', [WordsController::class, 'store'])->name('words.store');
+//    Route::post('/words/{words}/update', [WordsController::class, 'update'])->name('words.update');
+//    Route::post('/words/{words}/update', [WordsController::class, 'update'])->name('words.update');
+//
+//    Route::post('/words/sentence/{words}/create', [WordsController::class, 'sentenceStore'])->name('words.sentences.store');
+//    Route::get('/words/{wordSentences}/sentenceDelete', [WordsController::class, 'sentenceDestroy'])->name('words.sentences.delete');
 });
 
 require __DIR__ . '/auth.php';

@@ -21,10 +21,10 @@ export default function Authenticated({ user, header, actionButtons = null, chil
                             </div>
 
                             <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink href={route('dashboard')} active={route().current('dashboard')}>
+                                <NavLink href={route('admin.dashboard')} active={route().current('dashboard')}>
                                     Dashboard
                                 </NavLink>
-                                <NavLink href={route('words')} active={route().current('words')}>
+                                <NavLink href={route('admin.words')} active={route().current('words')}>
                                     Words
                                 </NavLink>
                                 <NavLink href={route('test-page')} active={route().current('test-page')}>
