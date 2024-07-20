@@ -28,6 +28,9 @@ Route::get('/', function () {
     ]);
 });
 Route::get('/ws', [TestPageController::class, 'ws']);
+Route::get('/privacy', function () {
+    return view('privacy');
+});
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
