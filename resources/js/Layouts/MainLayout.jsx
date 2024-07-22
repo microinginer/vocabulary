@@ -39,10 +39,6 @@ export default function MainLayout({children, auth}) {
                                     <Link href={route('login')} className="me-3 py-2 text-dark text-decoration-none">
                                         Log in
                                     </Link>
-
-                                    <Link href={route('register')} className="me-3 py-2 text-dark text-decoration-none">
-                                        Register
-                                    </Link>
                                 </>
                             )}
                         </nav>
@@ -52,28 +48,7 @@ export default function MainLayout({children, auth}) {
                 <footer className="pt-4 my-md-5 pt-md-5 border-top">
                     <div className="row">
                         <div className="col-12 col-md">
-                            <small className="d-block mb-3 text-muted">&copy; 2017–2021</small>
-                        </div>
-                        <div className="col-6 col-md">
-                            <h5>Features</h5>
-                            <ul className="list-unstyled text-small">
-                                <li className="mb-1"><a className="link-secondary text-decoration-none" href="#">Cool
-                                    stuff</a></li>
-                            </ul>
-                        </div>
-                        <div className="col-6 col-md">
-                            <h5>Resources</h5>
-                            <ul className="list-unstyled text-small">
-                                <li className="mb-1"><a className="link-secondary text-decoration-none"
-                                                        href="#">Resource</a></li>
-                            </ul>
-                        </div>
-                        <div className="col-6 col-md">
-                            <h5>About</h5>
-                            <ul className="list-unstyled text-small">
-                                <li className="mb-1"><a className="link-secondary text-decoration-none"
-                                                        href="#">Team</a></li>
-                            </ul>
+                            <small className="d-block mb-3 text-muted">Copyright &copy; 2024</small>
                         </div>
                     </div>
                 </footer>

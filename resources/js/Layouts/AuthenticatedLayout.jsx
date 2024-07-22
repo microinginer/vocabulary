@@ -24,7 +24,7 @@ export default function Authenticated({ user, header, actionButtons = null, chil
                                 <NavLink href={route('admin.dashboard')} active={route().current('dashboard')}>
                                     Dashboard
                                 </NavLink>
-                                <NavLink href={route('admin.words')} active={route().current('words')}>
+                                <NavLink href={route('admin.words.index')} active={route().current('words')}>
                                     Words
                                 </NavLink>
                                 <NavLink href={route('test-page')} active={route().current('test-page')}>

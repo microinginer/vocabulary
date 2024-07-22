@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin', function () {
         return view('admin.dashboard');
-    });
+    })->name('admin.dashboard');
     Route::put('/words/{word}/translation', [WordsController::class, 'updateTranslation']);
     Route::put('/words/{word}/difficulty', [WordsController::class, 'updateDifficulty']);
 
