@@ -91,7 +91,7 @@ export default function Login({status, canResetPassword}) {
                                 <PrimaryButton className="btn btn-primary" disabled={processing}>
                                     Log in
                                 </PrimaryButton>
-                                <a href="#" id="googleSignIn" className="btn btn-primary float-end">Login with Google</a>
+                                <a href={route('google.login') } id="googleSignIn" className="btn btn-primary float-end">Login with Google</a>
 
                             </div>
                         </div>

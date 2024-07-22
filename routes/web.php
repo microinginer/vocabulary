@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TestPageController;
 use App\Http\Controllers\WordsController;
@@ -36,6 +37,9 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::get('/test-page', [TestPageController::class, 'index'])->middleware(['auth', 'verified'])->name('test-page');
+
+Route::get('/google', [GoogleAuthController::class, 'redirectToGoogle'])->name('google.login');
+Route::get('/google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

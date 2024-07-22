@@ -21,7 +21,7 @@ class AuthController extends Controller
         if ($payload) {
             $email = $payload['email'];
             $name = $payload['name'];
-            $avatar = $payload['picture'];  // Получаем URL аватарки из токена
+            $avatar = $payload['picture'];
 
             $user = User::firstOrCreate(
                 ['email' => $email],
