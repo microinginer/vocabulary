@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChallengeController;
 use App\Http\Controllers\Api\GameController;
@@ -31,6 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
     Route::put('/user/profile', UserProfileController::class);
+    Route::delete('/account', [AccountController::class, 'destroy']);
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 
@@ -79,3 +81,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/game/{session}', [GameController::class, 'resultGame']);
     Route::get('/games', [GameController::class, 'getUserGames']);
 });
+
