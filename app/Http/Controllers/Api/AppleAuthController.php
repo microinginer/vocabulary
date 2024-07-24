@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Challenge;
+use App\Models\UserChallenge;
 use Illuminate\Http\Request;
 use Firebase\JWT\JWT;
 use Firebase\JWT\JWK;
@@ -39,6 +41,10 @@ class AppleAuthController extends Controller
         // Создание токена для пользователя
         $token = $user->createToken('authToken')->plainTextToken;
 
+        if ($user->wasRecentlyCreated) {
+            $this->createInitialChallenges($user);
+        }
+
         return response()->json(['token' => $token], 200);
     }
 
@@ -65,5 +71,29 @@ class AppleAuthController extends Controller
         $jwtDecoded = JWT::decode($identityToken, JWK::parseKeySet(['keys' => [$publicKey]]));
 
         return (array)$jwtDecoded;
+    }
+
+    private function createInitialChallenges(User $user): void
+    {
+        $dailyChallenges = Challenge::where('type', 'daily')->inRandomOrder()->take(1)->get();
+        $weeklyChallenges = Challenge::where('type', 'weekly')->inRandomOrder()->take(1)->get();
+
+        foreach ($dailyChallenges as $challenge) {
+            UserChallenge::create([
+                'user_id' => $user->id,
+                'challenge_id' => $challenge->id,
+                'progress' => 0,
+                'completed' => 0,
+            ]);
+        }
+
+        foreach ($weeklyChallenges as $challenge) {
+            UserChallenge::create([
+                'user_id' => $user->id,
+                'challenge_id' => $challenge->id,
+                'progress' => 0,
+                'completed' => 0,
+            ]);
+        }
     }
 }
