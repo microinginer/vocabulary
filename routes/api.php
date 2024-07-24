@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AccountController;
+use App\Http\Controllers\Api\AppleAuthController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChallengeController;
 use App\Http\Controllers\Api\GameController;
@@ -26,6 +27,7 @@ use App\Http\Controllers\Api\CustomWordController;
 */
 
 Route::post('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
+Route::post('/apple-login', [AppleAuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
