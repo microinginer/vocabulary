@@ -29,7 +29,7 @@ Route::get('/', function () {
     ]);
 });
 Route::get('/ws', [TestPageController::class, 'ws']);
-Route::get('/privacy', function () {
+Route::get('/page/privacy', function () {
     return view('privacy');
 });
 Route::get('/dashboard', function () {
