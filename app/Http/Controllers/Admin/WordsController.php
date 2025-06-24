@@ -3,29 +3,33 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\WordSentencesFormRequest;
 use App\Http\Requests\WordRequestForm;
 use App\Models\Words;
-use App\Models\WordSentences;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 
 class WordsController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        $words = Words::with(['translations' => function($query) {
+        $query = Words::with(['translations' => function ($query) {
             $query->whereIn('language', ['ru', 'uz']);
-        }])
-            ->paginate(100);
+        }]);
+
+        if ($request->has('language')) {
+            $query->where('language', $request->input('language'));
+        }
+
+        if ($request->has('word')) {
+            $query->where('word', 'like', '%'.$request->input('word').'%');
+        }
+
+        $words = $query->paginate(100);
 
         return Inertia::render('Admin/Words/Index', [
             'words' => $words,
+            'filters' => $request->only(['language','word']),
         ]);
     }
 

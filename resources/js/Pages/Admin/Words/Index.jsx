@@ -1,27 +1,43 @@
-import React, { useState, useEffect } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import React, {useState, useEffect} from 'react';
+import {Head, Link, useForm} from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
 
-export default function Index({ auth, words }) {
-    const { data, setData, put } = useForm({
+export default function Index({auth, words, filters}) {
+    console.log(filters)
+    const {data, setData, put, get} = useForm({
         language: '',
         translation: '',
         difficulty_level: '',
     });
+
     const [editingTranslation, setEditingTranslation] = useState(null);
     const [currentTranslation, setCurrentTranslation] = useState('');
     const [editingDifficulty, setEditingDifficulty] = useState(null);
     const [currentDifficulty, setCurrentDifficulty] = useState('');
+    const [language, setLanguage] = useState(filters.language || '');
+    const [word, setWord] = useState(filters.word || '');
 
     const handleEditClick = (e, wordId, language, translation) => {
         e.stopPropagation();
-        setEditingTranslation({ wordId, language });
+        setEditingTranslation({wordId, language});
         setCurrentTranslation(translation);
         setData({
             language,
             translation,
         });
     };
+
+    const handleChangeLanguage = (e) => {
+        setLanguage(e.target.value);
+        data.language = e.target.value;  // Устанавливаем значение напрямую
+        get('/admin/words', {preserveScroll: true});
+    }
+
+    const handleSearchByWord = (e) => {
+        data.word = word;
+        data.language = language;
+        get('/admin/words', {preserveScroll: true});
+    }
 
     const handleEditDifficultyClick = (e, wordId, difficulty_level) => {
         e.stopPropagation();
@@ -92,17 +108,49 @@ export default function Index({ auth, words }) {
             auth={auth}
             header={<h2 className="font-semibold text-xl">Words</h2>}
         >
-            <Head title="Words" />
+            <Head title="Words"/>
 
             <div className="py-4">
                 <div className="container">
                     <div className="card shadow-sm">
                         <div className="card-body">
+                            <div className="row">
+                                <div className="col-6">
+                                    <div className="mb-3">
+                                        <label htmlFor="languageFilter">Filter by Language:</label>
+                                        <select
+                                            id="languageFilter"
+                                            value={language}
+                                            onChange={(e) => handleChangeLanguage(e)}
+                                            className="form-control">
+                                            <option value="">All</option>
+                                            <option value="en">English (en)</option>
+                                            <option value="fr">French (fr)</option>
+                                            <option value="de">German (de)</option>
+                                            <option value="it">Italian (it)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="col-6">
+                                    <div className="mb-3">
+                                        <label htmlFor="wordFilter">Filter by Word:</label>
+                                        <input
+                                            id="wordFilter"
+                                            type="text"
+                                            value={word}
+                                            onKeyUp={(e) => e.key === 'Enter' && handleSearchByWord(e)}
+                                            onChange={(e) => setWord(e.target.value)}
+                                            className="form-control"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                             {/*<Link href="/admin/words/create" className="btn btn-primary mb-3">Create New Word</Link>*/}
                             <table className="table">
                                 <thead>
                                 <tr>
                                     <th>ID</th>
+                                    <th>Target</th>
                                     <th>Word</th>
                                     <th>Translation (RU)</th>
                                     <th>Translation (UZ)</th>
@@ -114,6 +162,7 @@ export default function Index({ auth, words }) {
                                 {words.data.map((word) => (
                                     <tr key={word.id}>
                                         <td>{word.id}</td>
+                                        <td>{word.language}</td>
                                         <td>{word.word}</td>
                                         <td
                                             onClick={(e) => handleEditClick(e, word.id, 'ru', word.translations.find(t => t.language === 'ru')?.translation || '')}
@@ -126,7 +175,8 @@ export default function Index({ auth, words }) {
                                                     className="form-control editable-input"
                                                 />
                                             ) : (
-                                                <span className="editable">{word.translations.find(t => t.language === 'ru')?.translation || 'N/A'}</span>
+                                                <span
+                                                    className="editable">{word.translations.find(t => t.language === 'ru')?.translation || 'N/A'}</span>
                                             )}
                                         </td>
                                         <td
@@ -140,7 +190,8 @@ export default function Index({ auth, words }) {
                                                     className="form-control editable-input"
                                                 />
                                             ) : (
-                                                <span className="editable">{word.translations.find(t => t.language === 'uz')?.translation || 'N/A'}</span>
+                                                <span
+                                                    className="editable">{word.translations.find(t => t.language === 'uz')?.translation || 'N/A'}</span>
                                             )}
                                         </td>
                                         <td
@@ -157,11 +208,13 @@ export default function Index({ auth, words }) {
                                                     <option value="3">Advanced</option>
                                                 </select>
                                             ) : (
-                                                <span className="editable">{["Beginner", "Intermediate", "Advanced"][word.difficulty_level - 1]}</span>
+                                                <span
+                                                    className="editable">{["Beginner", "Intermediate", "Advanced"][word.difficulty_level - 1]}</span>
                                             )}
                                         </td>
                                         <td>
-                                            <Link href={`/admin/words/${word.id}/edit`} className="btn btn-sm btn-warning me-2">Edit</Link>
+                                            <Link href={`/admin/words/${word.id}/edit`}
+                                                  className="btn btn-sm btn-warning me-2">Edit</Link>
                                             <Link
                                                 as="button"
                                                 method="delete"
@@ -183,7 +236,8 @@ export default function Index({ auth, words }) {
                                     <ul className="pagination">
                                         {words.links.map((link, index) => (
                                             <li key={index} className={`page-item ${link.active ? 'active' : ''}`}>
-                                                <Link className="page-link" href={link.url || '#'} dangerouslySetInnerHTML={{ __html: link.label }} />
+                                                <Link className="page-link" href={link.url || '#'}
+                                                      dangerouslySetInnerHTML={{__html: link.label}}/>
                                             </li>
                                         ))}
                                     </ul>

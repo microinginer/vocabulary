@@ -13,6 +13,7 @@ class Words extends Model
     protected $fillable = [
         'word',
         'translate',
+        'language',
         'is_active',
         'length',
         'pronunciation',

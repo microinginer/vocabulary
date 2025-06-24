@@ -14,6 +14,10 @@ class WordsController extends Controller
 {
     public function getRandomWords(Request $request): JsonResponse
     {
+        if ($request->bearerToken()) {
+            Auth::shouldUse('sanctum');
+        }
+
         // Define difficulty levels
         $difficultyLevels = [
             1 => 'Beginner',
@@ -22,9 +26,14 @@ class WordsController extends Controller
         ];
 
         $language = $request->input('language', 'ru');
+        $targetLanguage = $request->input('targetLanguage', 'en'); // Новый параметр
 
         if (!in_array($language, ['ru', 'uz', 'az'])) {
             return response()->json(['message' => 'Invalid language parameter. Valid options are: ru, uz, az.'], 400);
+        }
+
+        if (!in_array($targetLanguage, ['en', 'fr', 'de', 'it'])) {
+            return response()->json(['message' => 'Invalid targetLanguage parameter. Valid options are: en, fr, de, it.'], 400);
         }
 
         $query = Words::with(['sentences' => function ($query) use ($language) {
@@ -36,8 +45,8 @@ class WordsController extends Controller
                 $query->where('language', $language);
             }])
             ->has('sentences', '>=', 2)
-            ->inRandomOrder()
-        ;
+            ->where('language', $targetLanguage)
+            ->inRandomOrder();
 
 
         // Filter by difficulty level if provided
@@ -65,7 +74,7 @@ class WordsController extends Controller
         $words = $words->toArray();
 
         foreach ($words as $key => $word) {
-            $words[$key]['sentences'] = array_slice($word['sentences'],0,2);
+            $words[$key]['sentences'] = array_slice($word['sentences'], 0, 2);
             $translation = $word['translations'][0]['translation'] ?? null;
 
             if ($translation) {
@@ -110,8 +119,7 @@ class WordsController extends Controller
                 $query->where('language', $language);
             }])
             ->has('sentences', '>=', 2)
-            ->inRandomOrder()
-        ;
+            ->inRandomOrder();
 
         if ($request->has('difficulty_level')) {
             $difficultyLevel = $request->input('difficulty_level');
@@ -128,7 +136,7 @@ class WordsController extends Controller
         $words = $words->toArray();
 
         foreach ($words as $key => $word) {
-            $words[$key]['sentences'] = array_slice($word['sentences'],0,2);
+            $words[$key]['sentences'] = array_slice($word['sentences'], 0, 2);
             $translation = $word['translations'][0]['translation'] ?? null;
             foreach ($words[$key]['sentences'] as $sentenceKey => $sentence) {
                 $sentenceTranslation = $sentence['translations'][0]['translation'] ?? null;

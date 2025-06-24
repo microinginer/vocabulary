@@ -26,6 +26,7 @@ class WordRequestForm extends FormRequest
             'word' => ['required'],
             'translate' => ['required'],
             'is_active' => ['boolean'],
+            'language' => 'required|in:en,fr,de,it',
         ];
     }
 
