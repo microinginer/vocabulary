@@ -46,7 +46,10 @@ class UserWordMarkController extends Controller
             ->first();
 
         $repeatCount = $currentMark ? $currentMark->repeat_count + 1 : 1;
-        $isKnown = $currentMark ? (bool)$currentMark->is_known : $isKnown;
+
+        if (!$isKnown) {
+            $isKnown = $currentMark ? (bool)$currentMark->is_known : $isKnown;
+        }
 
         $mark = UserWordMark::updateOrCreate(
             ['user_id' => $user->id, 'word_id' => $request->word_id],
