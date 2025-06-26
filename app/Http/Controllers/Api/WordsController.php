@@ -46,7 +46,7 @@ class WordsController extends Controller
             }])
             ->has('sentences', '>=', 1)
             ->where('language', $targetLanguage)
-            ->orderBy('id','desc');
+            ->inRandomOrder();
 
 
         // Filter by difficulty level if provided
