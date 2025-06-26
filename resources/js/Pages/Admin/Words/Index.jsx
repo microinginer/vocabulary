@@ -145,7 +145,11 @@ export default function Index({auth, words, filters}) {
                                     </div>
                                 </div>
                             </div>
-                            {/*<Link href="/admin/words/create" className="btn btn-primary mb-3">Create New Word</Link>*/}
+                            <div className="d-flex justify-content-end mb-3">
+                                <Link href="/admin/words/create" className="btn btn-primary">
+                                    <i className="bi bi-plus-circle me-1"></i> Create New Word
+                                </Link>
+                            </div>
                             <table className="table">
                                 <thead>
                                 <tr>

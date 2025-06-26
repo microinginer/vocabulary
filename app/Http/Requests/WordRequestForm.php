@@ -24,9 +24,18 @@ class WordRequestForm extends FormRequest
     {
         return [
             'word' => ['required'],
-            'translate' => ['required'],
+            'difficulty_level' => ['required', 'integer'],
             'is_active' => ['boolean'],
             'language' => 'required|in:en,fr,de,it',
+            'translations' => 'array',
+            'translations.ru' => 'nullable|string',
+            'translations.uz' => 'nullable|string',
+            'sentences' => 'array',
+            'sentences.*.content' => 'required|string',
+            'sentences.*.content_translate' => 'nullable|string',
+            'sentences.*.translations' => 'array',
+            'sentences.*.translations.*.language' => 'required|string',
+            'sentences.*.translations.*.translation' => 'required|string',
         ];
     }
 

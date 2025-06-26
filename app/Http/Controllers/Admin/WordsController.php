@@ -25,7 +25,7 @@ class WordsController extends Controller
             $query->where('word', 'like', '%'.$request->input('word').'%');
         }
 
-        $words = $query->paginate(100);
+        $words = $query->orderBy('id', 'desc')->paginate(100);
 
         return Inertia::render('Admin/Words/Index', [
             'words' => $words,
@@ -46,7 +46,53 @@ class WordsController extends Controller
      */
     public function store(WordRequestForm $request)
     {
-        Words::create($request->validated());
+        $validatedData = $request->validated();
+        $validatedData['translate'] = 'none';
+        $validatedData['length'] = strlen($validatedData['word']);
+        $translations = $validatedData['translations'] ?? [];
+        $sentences = $validatedData['sentences'] ?? [];
+        unset($validatedData['translations']);
+        unset($validatedData['sentences']);
+
+        $word = Words::create($validatedData);
+
+        // Save translations if provided
+        if (!empty($translations)) {
+            foreach ($translations as $language => $translation) {
+                if (!empty($translation)) {
+                    $word->translations()->create([
+                        'language' => $language,
+                        'translation' => $translation
+                    ]);
+                }
+            }
+        }
+
+        // Save sentences if provided
+        if (!empty($sentences)) {
+            foreach ($sentences as $sentenceData) {
+                if (!empty($sentenceData['content'])) {
+                    $sentence = $word->sentences()->create([
+                        'content' => $sentenceData['content'],
+                        'content_translate' => $sentenceData['content_translate'] ?? '',
+                        'words_id' => $word->id
+                    ]);
+
+                    // Save sentence translations if provided
+                    if (!empty($sentenceData['translations'])) {
+                        foreach ($sentenceData['translations'] as $translationData) {
+                            if (!empty($translationData['translation'])) {
+                                $sentence->translations()->create([
+                                    'word_sentence_id' => $sentence->id,
+                                    'language' => $translationData['language'],
+                                    'translation' => $translationData['translation']
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         return redirect()->route('admin.words.index')->with('success', 'Word created successfully.');
     }
@@ -66,6 +112,14 @@ class WordsController extends Controller
      */
     public function edit(Words $word)
     {
+        $word->load(['translations' => function ($query) {
+            $query->whereIn('language', ['ru', 'uz']);
+        }]);
+
+        $word->load(['sentences.translations' => function ($query) {
+            // Load all sentence translations
+        }]);
+
         return Inertia::render('Admin/Words/Edit', [
             'word' => $word,
         ]);
@@ -76,7 +130,97 @@ class WordsController extends Controller
      */
     public function update(WordRequestForm $request, Words $word)
     {
-        $word->update($request->validated());
+        $validatedData = $request->validated();
+        $translations = $validatedData['translations'] ?? [];
+        $sentences = $validatedData['sentences'] ?? [];
+        unset($validatedData['translations']);
+        unset($validatedData['sentences']);
+
+        $word->update($validatedData);
+
+        // Update translations
+        if (!empty($translations)) {
+            foreach ($translations as $language => $translation) {
+                if (!empty($translation)) {
+                    $word->translations()->updateOrCreate(
+                        ['language' => $language],
+                        ['translation' => $translation]
+                    );
+                }
+            }
+        }
+
+        // Handle sentences
+        // First, get existing sentence IDs to track which ones to keep
+        $existingSentenceIds = $word->sentences()->pluck('id')->toArray();
+        $updatedSentenceIds = [];
+
+        if (!empty($sentences)) {
+            foreach ($sentences as $sentenceData) {
+                if (!empty($sentenceData['content'])) {
+                    // If sentence has an ID, update it, otherwise create new
+                    if (isset($sentenceData['id'])) {
+                        $sentence = $word->sentences()->find($sentenceData['id']);
+                        if ($sentence) {
+                            $sentence->update([
+                                'content' => $sentenceData['content'],
+                                'content_translate' => $sentenceData['content_translate'] ?? '',
+                            ]);
+                            $updatedSentenceIds[] = $sentence->id;
+                        }
+                    } else {
+                        $sentence = $word->sentences()->create([
+                            'content' => $sentenceData['content'],
+                            'content_translate' => $sentenceData['content_translate'] ?? '',
+                            'words_id' => $word->id
+                        ]);
+                        $updatedSentenceIds[] = $sentence->id;
+                    }
+
+                    // Handle sentence translations
+                    if (!empty($sentenceData['translations'])) {
+                        // Get existing translation IDs to track which ones to keep
+                        $existingTranslationIds = $sentence->translations()->pluck('id')->toArray();
+                        $updatedTranslationIds = [];
+
+                        foreach ($sentenceData['translations'] as $translationData) {
+                            if (!empty($translationData['translation'])) {
+                                // If translation has an ID, update it, otherwise create new
+                                if (isset($translationData['id'])) {
+                                    $translation = $sentence->translations()->find($translationData['id']);
+                                    if ($translation) {
+                                        $translation->update([
+                                            'language' => $translationData['language'],
+                                            'translation' => $translationData['translation']
+                                        ]);
+                                        $updatedTranslationIds[] = $translation->id;
+                                    }
+                                } else {
+                                    $translation = $sentence->translations()->create([
+                                        'word_sentence_id' => $sentence->id,
+                                        'language' => $translationData['language'],
+                                        'translation' => $translationData['translation']
+                                    ]);
+                                    $updatedTranslationIds[] = $translation->id;
+                                }
+                            }
+                        }
+
+                        // Delete translations that weren't updated
+                        $translationsToDelete = array_diff($existingTranslationIds, $updatedTranslationIds);
+                        if (!empty($translationsToDelete)) {
+                            $sentence->translations()->whereIn('id', $translationsToDelete)->delete();
+                        }
+                    }
+                }
+            }
+        }
+
+        // Delete sentences that weren't updated
+        $sentencesToDelete = array_diff($existingSentenceIds, $updatedSentenceIds);
+        if (!empty($sentencesToDelete)) {
+            $word->sentences()->whereIn('id', $sentencesToDelete)->delete();
+        }
 
         return redirect()->route('admin.words.index')->with('success', 'Word updated successfully.');
     }
