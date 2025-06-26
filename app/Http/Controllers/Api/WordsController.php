@@ -44,7 +44,7 @@ class WordsController extends Controller
             ->with(['translations' => function ($query) use ($language) {
                 $query->where('language', $language);
             }])
-            ->has('sentences', '>=', 2)
+            ->has('sentences', '>=', 1)
             ->where('language', $targetLanguage)
             ->inRandomOrder();
 
