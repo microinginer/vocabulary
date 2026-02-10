@@ -18,6 +18,12 @@ class WordSentences extends Model
         'content_translate',
         'content',
         'words_id',
+        'gpt_status',
+        'gpt_enriched_at',
+        'gpt_attempts',
+        'gpt_last_error',
+        'gpt_lock_until',
+        'gpt_model',
     ];
 
     public function word(): BelongsTo
