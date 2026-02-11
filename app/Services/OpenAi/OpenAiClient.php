@@ -56,6 +56,22 @@ class OpenAiClient
     }
 
     /**
+     * Generate example sentences for words
+     *
+     * @param array $payload Format: [['id' => 1, 'word' => 'apple', 'needed' => 2], ...]
+     * @return array Format: ['items' => [['id' => 1, 'sentences_en' => ['...', '...']], ...]]
+     */
+    public function generateSentences(array $payload): array
+    {
+        Log::info('OpenAI generateSentences called', ['batch_size' => count($payload)]);
+
+        $systemPrompt = $this->getSentenceGenerationSystemPrompt();
+        $userMessage = $this->buildSentenceGenerationPrompt($payload);
+
+        return $this->callOpenAi($systemPrompt, $userMessage);
+    }
+
+    /**
      * Call OpenAI API with retry logic
      */
     private function callOpenAi(string $systemPrompt, string $userMessage): array
@@ -207,6 +223,28 @@ PROMPT;
     }
 
     /**
+     * System prompt for sentence generation
+     */
+    private function getSentenceGenerationSystemPrompt(): string
+    {
+        return <<<'PROMPT'
+You are a professional English language teacher. Generate simple example sentences for vocabulary words.
+
+CRITICAL RULES:
+1. Output ONLY valid JSON, no markdown, no code blocks, no extra text
+2. Use this exact format: {"items": [{"id": number, "sentences_en": ["...", "..."]}]}
+3. Generate EXACTLY the number of sentences requested for each word (see "needed" field)
+4. Each sentence must be 6-12 words long
+5. Each sentence MUST contain the exact word (case-insensitive) at least once
+6. Keep sentences simple, natural, and beginner-friendly
+7. Avoid proper nouns and slang
+8. Avoid duplicates and near-duplicates within the same word
+9. Make sentences realistic and practical
+
+PROMPT;
+    }
+
+    /**
      * Build user message for word enrichment
      */
     private function buildWordEnrichmentPrompt(array $payload): string
@@ -238,6 +276,23 @@ PROMPT;
         }
 
         return json_encode(['sentences' => $items], JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * Build user message for sentence generation
+     */
+    private function buildSentenceGenerationPrompt(array $payload): string
+    {
+        $items = [];
+        foreach ($payload as $item) {
+            $items[] = [
+                'id' => $item['id'],
+                'word' => $item['word'],
+                'needed' => $item['needed'] ?? 2, // Default to 2 sentences if not specified
+            ];
+        }
+
+        return json_encode(['words' => $items], JSON_UNESCAPED_UNICODE);
     }
 
     /**
