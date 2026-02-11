@@ -60,26 +60,66 @@ class VocabExportCoreSeed extends Command
             $tMap[$wid][$lang] = $val;
         }
 
-        // Sentences (word_sentences) -> pick best sentence for exampleSentenceEn
+        /**
+         * Sentences
+         * - keep backward compatible: exampleSentenceEn = best (shortest) sentence
+         * - add new: exampleSentencesEn = all sentences with translations
+         */
         $sentences = DB::table('word_sentences')
             ->select(['id', 'words_id', 'content'])
             ->whereIn('words_id', $wordIds)
             ->orderBy('id')
             ->get();
 
-        $sentenceMap = []; // words_id => sentence
+        $sentenceIds = $sentences->pluck('id')->map(fn ($v) => (int) $v)->all();
+
+        // Sentence translations (word_sentence_translations)
+        $sentenceTranslations = collect();
+        if (!empty($sentenceIds)) {
+            $sentenceTranslations = DB::table('word_sentence_translations')
+                ->select(['word_sentence_id', 'language', 'translation'])
+                ->whereIn('word_sentence_id', $sentenceIds)
+                ->orderBy('id')
+                ->get();
+        }
+
+        $stMap = []; // sentence_id => [lang => translation]
+        foreach ($sentenceTranslations as $t) {
+            $sid = (int) $t->word_sentence_id;
+            $lang = (string) $t->language;
+            $val = trim((string) $t->translation);
+
+            if ($val === '') {
+                continue;
+            }
+
+            $stMap[$sid] ??= [];
+            $stMap[$sid][$lang] = $val;
+        }
+
+        $sentenceBestMap = [];     // words_id => best sentence (shortest)
+        $sentenceFullMap = [];     // words_id => array of {en, translations}
         foreach ($sentences as $s) {
             $wid = (int) $s->words_id;
+            $sid = (int) $s->id;
             $content = trim((string) $s->content);
 
             if ($content === '') {
                 continue;
             }
 
-            // choose shortest sentence
-            if (!isset($sentenceMap[$wid]) || mb_strlen($content) < mb_strlen($sentenceMap[$wid])) {
-                $sentenceMap[$wid] = $content;
+            // best sentence for backward compatibility
+            if (!isset($sentenceBestMap[$wid]) || mb_strlen($content) < mb_strlen($sentenceBestMap[$wid])) {
+                $sentenceBestMap[$wid] = $content;
             }
+
+            // all sentences + translations
+            $sentenceFullMap[$wid] ??= [];
+            $sentenceFullMap[$wid][] = [
+                'en' => $content,
+                // keep as object in JSON when empty -> {}
+                'translations' => !empty($stMap[$sid]) ? $stMap[$sid] : (object)[],
+            ];
         }
 
         $sets = [];
@@ -121,14 +161,21 @@ class VocabExportCoreSeed extends Command
                 $pronunciationRef = 'audio/' . $sourceLang . '/' . strtolower($level) . '/' . Str::slug($word, '_') . '.mp3';
             }
 
-            $example = $sentenceMap[$mysqlId] ?? $this->defaultExample($word);
+            $example = $sentenceBestMap[$mysqlId] ?? $this->defaultExample($word);
+
+            // New field: all sentences with translations (do not inject default into list)
+            $allExamples = $sentenceFullMap[$mysqlId] ?? [];
+            if (!is_array($allExamples)) {
+                $allExamples = [];
+            }
 
             $sets[$setId]['words'][$wordId] = [
                 'id' => $wordId,
                 'word' => $word,
                 'ipa' => $ipa ?: null,
                 'pronunciationRef' => $pronunciationRef,
-                'exampleSentenceEn' => $example,
+                'exampleSentenceEn' => $example,      // old (kept)
+                'exampleSentencesEn' => $allExamples, // new (added)
                 'translations' => $trs,
                 'tags' => [],
                 'level' => $level,

@@ -22,7 +22,8 @@ return [
     |
     */
 
-    'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
+//    'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
+    'model' => env('OPENAI_MODEL', 'gpt-4o'),
 
     /*
     |--------------------------------------------------------------------------
